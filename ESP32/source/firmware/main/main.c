@@ -23,6 +23,8 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_timer.h"
+#include "esp_random.h"
+#include "esp_mac.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -169,7 +171,7 @@ static void uart_task() {
   ESP_LOGI("hi", "Hi from core %d!. uart_task\n", xPortGetCoreID());
   // uart_flush(UART_NUM);
   while (1) {
-    int len = uart_read_bytes(UART_NUM, uart_data, BUF_SIZE, portTICK_RATE_MS);
+    int len = uart_read_bytes(UART_NUM, uart_data, BUF_SIZE, portTICK_PERIOD_MS);
 
     if (len > 0) {
       ESP_LOGI("uart in", "length: %d - %X", len, uart_data[0]);
@@ -840,11 +842,11 @@ void set_bt_address()
         uint8_t bt_addr[8];
 
         err = nvs_open("storage", NVS_READWRITE, &my_handle);
-        if (err != ESP_OK) return err;
+        if (err != ESP_OK) return;
 
         size_t addr_size = 0;
         err = nvs_get_blob(my_handle, "mac_addr", NULL, &addr_size);
-        if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) return err;
+        if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) return;
 
         if (addr_size > 0) {
                 err = nvs_get_blob(my_handle, "mac_addr", bt_addr, &addr_size);
@@ -926,7 +928,7 @@ void esp_bt_hidd_cb(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param)
                     ESP_LOGI(TAG, "setting hid parameters success!");
                     ESP_LOGI(TAG, "setting to connectable, discoverable");
                     esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-                    if (param->register_app.in_use && param->register_app.bd_addr != NULL) {
+                    if (param->register_app.in_use) {
                             ESP_LOGI(TAG, "start virtual cable plug!");
                             esp_bt_hid_device_connect(param->register_app.bd_addr);
                     }
