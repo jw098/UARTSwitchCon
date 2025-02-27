@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "driver/gpio.h"
-#include "driver/periph_ctrl.h"
+#include "esp_private/periph_ctrl.h"
 #include "driver/spi_master.h"
 #include "driver/uart.h"
 #include "esp_bt.h"
@@ -39,7 +39,7 @@
 #define JOYCON_L 0x01
 #define JOYCON_R 0x02
 
-#define CONTROLLER_TYPE JOYCON_L
+#define CONTROLLER_TYPE PRO_CON
 
 // Buttons and sticks
 #define A_DPAD_CENTER 0x08
@@ -691,8 +691,8 @@ static uint8_t spi_reply_address_0x50[] = {
     0x23, 0x23, 0x23,                                      // Body color
     0xff, 0xff, 0xff,                                      // Buttons color
 #if CONTROLLER_TYPE == PRO_CON
-    0x95, 0x15, 0x15,  // Left Grip color (Pro Con)
-    0x15, 0x15, 0x95,  // Right Grip color (Pro Con)
+    0xC8, 0x8C, 0x32,  // Left Grip color (Pro Con) - Eevee #C8 8C 32
+    0xFF, 0xDC, 0x00,  // Right Grip color (Pro Con) - Pikachu #FF DC 00
 #else
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 #endif
@@ -882,7 +882,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         switch(event) {
         case ESP_BT_GAP_DISC_RES_EVT:
                 ESP_LOGI(SPP_TAG, "ESP_BT_GAP_DISC_RES_EVT");
-                esp_log_buffer_hex(SPP_TAG, param->disc_res.bda, ESP_BD_ADDR_LEN);
+                ESP_LOG_BUFFER_HEX(SPP_TAG, param->disc_res.bda, ESP_BD_ADDR_LEN);
                 break;
         case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:
                 ESP_LOGI(SPP_TAG, "ESP_BT_GAP_DISC_STATE_CHANGED_EVT");
@@ -897,7 +897,7 @@ static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *pa
         case ESP_BT_GAP_AUTH_CMPL_EVT: {
                 if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
                         ESP_LOGI(SPP_TAG, "authentication success: %s", param->auth_cmpl.device_name);
-                        esp_log_buffer_hex(SPP_TAG, param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
+                        ESP_LOG_BUFFER_HEX(SPP_TAG, param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
                 } else {
                         ESP_LOGE(SPP_TAG, "authentication failed, status:%d", param->auth_cmpl.stat);
                 }
@@ -1020,7 +1020,7 @@ void esp_bt_hidd_cb(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param)
             break;
     case ESP_HIDD_INTR_DATA_EVT:
         ESP_LOGI(TAG, "ESP_HIDD_INTR_DATA_EVT");
-        esp_log_buffer_hex(TAG, param->intr_data.data, param->intr_data.len);
+        ESP_LOG_BUFFER_HEX(TAG, param->intr_data.data, param->intr_data.len);
         if (param->intr_data.data[9] == 2) {
           esp_bt_hid_device_send_report(ESP_HIDD_REPORT_TYPE_INTRDATA, 0x21,
                                      sizeof(reply02), reply02);
@@ -1224,11 +1224,11 @@ void app_main() {
   ESP_LOGI(TAG, "setting device name");
 
   if (CONTROLLER_TYPE == JOYCON_L)
-    esp_bt_dev_set_device_name("Joy-Con (L)");
+    esp_bt_gap_set_device_name("Joy-Con (L)");
   else if (CONTROLLER_TYPE == JOYCON_R)
-    esp_bt_dev_set_device_name("Joy-Con (R)");
+    esp_bt_gap_set_device_name("Joy-Con (R)");
   else
-    esp_bt_dev_set_device_name("Pro Controller");
+    esp_bt_gap_set_device_name("Pro Controller");
 
   ESP_LOGI(TAG, "setting hid device class");
   esp_bt_gap_set_cod(dclass, ESP_BT_SET_COD_ALL);
