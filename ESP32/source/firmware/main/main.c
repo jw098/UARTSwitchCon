@@ -691,8 +691,8 @@ static uint8_t spi_reply_address_0x50[] = {
     0x23, 0x23, 0x23,                                      // Body color
     0xff, 0xff, 0xff,                                      // Buttons color
 #if CONTROLLER_TYPE == PRO_CON
-    0x95, 0x15, 0x15,  // Left Grip color (Pro Con)
-    0x15, 0x15, 0x95,  // Right Grip color (Pro Con)
+    0xC8, 0x8C, 0x32,  // Left Grip color (Pro Con) - Eevee #C8 8C 32
+    0xFF, 0xDC, 0x00,  // Right Grip color (Pro Con) - Pikachu #FF DC 00
 #else
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 #endif
